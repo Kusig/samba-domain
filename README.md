@@ -1,3 +1,6 @@
+# This is a fork of the fmstrat repo at https://github.com/Fmstrat/samba-domain
+# At the moment, the only difference is that this fork has webmin pre-installed at the default 10000 port
+
 # Samba Active Directory Domain Controller for Docker
 
 A well documented, tried and tested Samba Active Directory Domain Controller that works with the standard Windows management tools; built from scratch using internal DNS and kerberos and not based on existing containers.
@@ -531,6 +534,9 @@ services:
 
 # ----------- samba end ----------- #
 ```
+
+## Webmin Integration
+Webmin is installed on this docker forked docker image, so the port 10000 can be exposed for samba management
 
 ## Joining the domain with Ubuntu
 For joining the domain with any client, everything should work just as you would expect if the active directory server was Windows based. For Ubuntu, there are many guides availble for joining, but to make things easier you can find an easily configurable script for joining your domain here: https://raw.githubusercontent.com/Fmstrat/samba-domain/master/ubuntu-join-domain.sh

@@ -88,6 +88,9 @@ appSetup () {
 	echo "" >> /etc/supervisor/conf.d/supervisord.conf
 	echo "[program:samba]" >> /etc/supervisor/conf.d/supervisord.conf
 	echo "command=/usr/sbin/samba -i" >> /etc/supervisor/conf.d/supervisord.conf
+	echo "" >> /etc/supervisor/conf.d/supervisord.conf
+	echo "[program:webmin]" >> /etc/supervisor/conf.d/supervisord.conf
+	echo "command=/usr/bin/perl /usr/share/webmin/miniserv.pl /etc/webmin/miniserv.conf" >> /etc/supervisor/conf.d/supervisord.conf
 	if [[ ${MULTISITE,,} == "true" ]]; then
 		if [[ -n $VPNPID ]]; then
 			kill $VPNPID
