@@ -1,5 +1,4 @@
-FROM ubuntu:xenial
-LABEL manteiner="celsoalexandre <celsoalexandre@NOSPAM.NO>"
+FROM ubuntu:focal
 
 ENV DEBIAN_FRONTEND noninteractive
 
@@ -23,8 +22,8 @@ RUN apt-get install -y apt-show-versions
 
 # Install webmin dependencies
 RUN apt-get install -y unzip wget libnet-ssleay-perl libauthen-pam-perl libio-pty-perl
-RUN wget https://prdownloads.sourceforge.net/webadmin/webmin_1.941_all.deb
-RUN dpkg -i webmin_1.941_all.deb
+RUN wget https://sourceforge.net/projects/webadmin/files/webmin/1.984/webmin_1.984_all.deb
+RUN dpkg -i webmin_1.984_all.deb
 
 # Set up script and run
 ADD init.sh /init.sh
