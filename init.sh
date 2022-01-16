@@ -1,9 +1,10 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 set -e
+echo "Running $0 $1"
 
 appSetup () {
-
+  echo "Runnig samba setup"
 	# Set variables
 	DOMAIN=${DOMAIN:-SAMDOM.LOCAL}
 	DOMAINPASS=${DOMAINPASS:-youshouldsetapassword}
@@ -14,10 +15,11 @@ appSetup () {
 	INSECURELDAP=${INSECURELDAP:-false}
 	DNSFORWARDER=${DNSFORWARDER:-NONE}
 	HOSTIP=${HOSTIP:-NONE}
-	
 	LDOMAIN=${DOMAIN,,}
 	UDOMAIN=${DOMAIN^^}
 	URDOMAIN=${UDOMAIN%%.*}
+	SAMBAPARAMS=${SAMBAPARAMETERS}
+	echo "Starting Samba setup params=${SAMBAPARAMS}"
 
 	# If multi-site, we need to connect to the VPN before joining the domain
 	if [[ ${MULTISITE,,} == "true" ]]; then
@@ -27,12 +29,13 @@ appSetup () {
 		sleep 30
 	fi
 
-        # Set host ip option
-        if [[ "$HOSTIP" != "NONE" ]]; then
-		HOSTIP_OPTION="--host-ip=$HOSTIP"
-        else
-		HOSTIP_OPTION=""
-        fi
+  # Set host ip option
+  if [[ "$HOSTIP" != "NONE" ]]; then
+	  	HOSTIP_OPTION="--host-ip=$HOSTIP"
+    else
+		  HOSTIP_OPTION=""
+  fi
+	echo "HostIP param=${HOSTIP_OPTION}"
 
 	# Set up samba
 	mv /etc/krb5.conf /etc/krb5.conf.orig
@@ -42,6 +45,7 @@ appSetup () {
 	echo "    default_realm = ${UDOMAIN}" >> /etc/krb5.conf
 	# If the finished file isn't there, this is brand new, we're not just moving to a new container
 	if [[ ! -f /etc/samba/external/smb.conf ]]; then
+	  echo "No configuration detected, setup from scratch"
 		mv /etc/samba/smb.conf /etc/samba/smb.conf.orig
 		if [[ ${JOIN,,} == "true" ]]; then
 			if [[ ${JOINSITE} == "NONE" ]]; then
@@ -79,15 +83,17 @@ appSetup () {
 		# Once we are set up, we'll make a file so that we know to use it if we ever spin this up again
 		cp /etc/samba/smb.conf /etc/samba/external/smb.conf
 	else
+	  echo "Existing configuration detected"
 		cp /etc/samba/external/smb.conf /etc/samba/smb.conf
 	fi
         
 	# Set up supervisor
 	echo "[supervisord]" > /etc/supervisor/conf.d/supervisord.conf
 	echo "nodaemon=true" >> /etc/supervisor/conf.d/supervisord.conf
+	echo "user=root" >> /etc/supervisor/conf.d/supervisord.conf
 	echo "" >> /etc/supervisor/conf.d/supervisord.conf
 	echo "[program:samba]" >> /etc/supervisor/conf.d/supervisord.conf
-	echo "command=/usr/sbin/samba -i" >> /etc/supervisor/conf.d/supervisord.conf
+	echo "command=/usr/sbin/samba --foreground --no-process-group ${SAMBAPROPERTIES}" >> /etc/supervisor/conf.d/supervisord.conf
 	echo "" >> /etc/supervisor/conf.d/supervisord.conf
 	echo "[program:webmin]" >> /etc/supervisor/conf.d/supervisord.conf
 	echo "command=/usr/bin/perl /usr/share/webmin/miniserv.pl /etc/webmin/miniserv.conf" >> /etc/supervisor/conf.d/supervisord.conf
@@ -99,17 +105,26 @@ appSetup () {
 		echo "[program:openvpn]" >> /etc/supervisor/conf.d/supervisord.conf
 		echo "command=/usr/sbin/openvpn --config /docker.ovpn" >> /etc/supervisor/conf.d/supervisord.conf
 	fi
-	
+
+  NOW=$(date)
+	echo "Samba container initialisation completed on ${NOW}" > /etc/samba/init.txt
+	echo "DOMAIN=${DOMAINNAME}" >> /etc/samba/init.txt
+	echo "PARMETERS=${SAMBAPARAMETERS}" >> /etc/samba/init.txt
+  echo "HOSTIP=${HOSTIP}" >> /etc/samba/init.txt
+
 	appStart
+
 }
 
 appStart () {
+  echo "Runnig samba start"
 	/usr/bin/supervisord
 }
 
 case "$1" in
 	start)
 		if [[ -f /etc/samba/external/smb.conf ]]; then
+		  echo "Copy samba conf"
 			cp /etc/samba/external/smb.conf /etc/samba/smb.conf
 			appStart
 		else
@@ -119,8 +134,10 @@ case "$1" in
 	setup)
 		# If the supervisor conf isn't there, we're spinning up a new container
 		if [[ -f /etc/supervisor/conf.d/supervisord.conf ]]; then
+		  echo "Setup already completed"
 			appStart
 		else
+		  echo "Setup needed"
 			appSetup
 		fi
 		;;
