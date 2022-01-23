@@ -1,0 +1,45 @@
+version: '3'
+
+services:
+
+  samba:
+    image: guentherm/samba-domain:4.13.14-Ubuntu
+    container_name: samba
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/samba/samba/data/:/var/lib/samba
+      - /etc/samba/samba/config/:/etc/samba/external
+      - /home/share1:/home/share1
+      - /home/share2:/home/share2
+    environment:
+      - DOMAIN=MYDOMAIN.CH
+      - DOMAINPASS=myDomainAdminPassword
+      - JOIN=true
+      - DNSFORWARDER=192.168.100.1
+      - HOSTIP=192.168.100.2
+      - INSECURELDAP=true
+      - SAMBAPARAMETERS=--debug-stderr --debuglevel=3
+      - SAMBAINTERFACES=127.0.0.1 192.168.100.2
+      - SAMBAJOINDNSBACKEND=SAMBA_INTERNAL
+      - SAMBAJOINOPTIONS=
+      - INITIALCONFIG=smb.join.conf
+    network_mode: host
+    dns_search:
+      - mydomain.ch
+    dns:
+      - 192.168.100.1
+    extra_hosts:
+      - server1:192.168.100.1
+      - server2:192.168.100.2
+    hostname: server2
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun
+    privileged: true
+    restart: always
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "33m"
+        max-file: "3"

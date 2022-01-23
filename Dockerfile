@@ -12,7 +12,7 @@ RUN apt-get install bash
 
 # The third line is for multi-site config (ping is for testing later)
 RUN apt-get install -y pkg-config
-RUN apt-get install -y attr acl samba smbclient ldap-utils winbind libnss-winbind libpam-winbind krb5-user krb5-kdc supervisor
+RUN apt-get install -y attr acl samba smbclient ldap-utils winbind libnss-winbind libpam-winbind krb5-user krb5-kdc supervisor ldb-tools
 RUN apt-get install -y openvpn inetutils-ping
 
 # apt-show-versions bug fix: https://groups.google.com/forum/#!topic/beagleboard/jXb9KhoMOsk

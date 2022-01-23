@@ -19,7 +19,15 @@ appSetup () {
 	UDOMAIN=${DOMAIN^^}
 	URDOMAIN=${UDOMAIN%%.*}
 	SAMBAPARAMS=${SAMBAPARAMETERS}
-	echo "Starting Samba setup params=${SAMBAPARAMS}"
+	INTERFACES=${SAMBAINTERFACES:-NONE}
+	JOINDNSBACKEND=${SAMBAJOINDNSBACKEND:-SAMBA_INTERNAL}
+	JOINOPTIONS=${SAMBAJOINOPTIONS}
+	INITCONFIG=${INITIALCONFIG:-NONE}
+	echo "Starting with Samba setup params=${SAMBAPARAMS}"
+  echo "Starting with Samba interfaces=${INTERFACES}"
+  echo "Starting with Samba join dns-backend=${JOINDNSBACKEND}"
+  echo "Starting with Samba join options=${JOINOPTIONS}"
+  echo "Starting with InitialConfig file=${INITCONFIG}"
 
 	# If multi-site, we need to connect to the VPN before joining the domain
 	if [[ ${MULTISITE,,} == "true" ]]; then
@@ -43,15 +51,24 @@ appSetup () {
 	echo "    dns_lookup_realm = false" >> /etc/krb5.conf
 	echo "    dns_lookup_kdc = true" >> /etc/krb5.conf
 	echo "    default_realm = ${UDOMAIN}" >> /etc/krb5.conf
+
 	# If the finished file isn't there, this is brand new, we're not just moving to a new container
 	if [[ ! -f /etc/samba/external/smb.conf ]]; then
 	  echo "No configuration detected, setup from scratch"
 		mv /etc/samba/smb.conf /etc/samba/smb.conf.orig
+
+    # Load initial configuration if configured
+    if [[ "$INITCONFIG" != "NONE" ]]; then
+      echo "Using initial configuration file ${INITCONFIG}"
+	  	cp "/etc/samba/external/${INITCONFIG}" /etc/samba/smb.conf
+    fi
+
 		if [[ ${JOIN,,} == "true" ]]; then
 			if [[ ${JOINSITE} == "NONE" ]]; then
-				samba-tool domain join ${LDOMAIN} DC -U"${URDOMAIN}\administrator" --password="${DOMAINPASS}" --dns-backend=SAMBA_INTERNAL
+		    echo samba-tool domain join ${LDOMAIN} DC -U"${URDOMAIN}\administrator" --password="${DOMAINPASS}" --dns-backend="${JOINDNSBACKEND}" ${JOINOPTIONS}
+				samba-tool domain join ${LDOMAIN} DC -U"${URDOMAIN}\administrator" --password="${DOMAINPASS}" --dns-backend="${JOINDNSBACKEND}" ${JOINOPTIONS}
 			else
-				samba-tool domain join ${LDOMAIN} DC -U"${URDOMAIN}\administrator" --password="${DOMAINPASS}" --dns-backend=SAMBA_INTERNAL --site=${JOINSITE}
+				samba-tool domain join ${LDOMAIN} DC -U"${URDOMAIN}\administrator" --password="${DOMAINPASS}" --site=${JOINSITE} --dns-backend="${JOINDNSBACKEND}" ${JOINOPTIONS}
 			fi
 		else
 			samba-tool domain provision --use-rfc2307 --domain=${URDOMAIN} --realm=${UDOMAIN} --server-role=dc --dns-backend=SAMBA_INTERNAL --adminpass=${DOMAINPASS} ${HOSTIP_OPTION}
@@ -62,6 +79,7 @@ appSetup () {
 				samba-tool domain passwordsettings set --max-pwd-age=0
 			fi
 		fi
+
 		sed -i "/\[global\]/a \
 			\\\tidmap_ldb:use rfc2307 = yes\\n\
 			wins support = yes\\n\
@@ -80,7 +98,14 @@ appSetup () {
 				\\\tldap server require strong auth = no\
 				" /etc/samba/smb.conf
 		fi
-		# Once we are set up, we'll make a file so that we know to use it if we ever spin this up again
+		if [[ $INTERFACES != "NONE" ]]; then
+			sed -i "/\[global\]/a \
+				\\\tinterfaces = ${INTERFACES}\\n\
+				bind interfaces only = yes\
+				" /etc/samba/smb.conf
+		fi
+
+		# Once we are set up, we'll make the marker file so that we know to use it if we ever spin this up again
 		cp /etc/samba/smb.conf /etc/samba/external/smb.conf
 	else
 	  echo "Existing configuration detected"
@@ -93,7 +118,7 @@ appSetup () {
 	echo "user=root" >> /etc/supervisor/conf.d/supervisord.conf
 	echo "" >> /etc/supervisor/conf.d/supervisord.conf
 	echo "[program:samba]" >> /etc/supervisor/conf.d/supervisord.conf
-	echo "command=/usr/sbin/samba --foreground --no-process-group ${SAMBAPROPERTIES}" >> /etc/supervisor/conf.d/supervisord.conf
+	echo "command=/usr/sbin/samba --foreground --no-process-group ${SAMBAPARAMS}" >> /etc/supervisor/conf.d/supervisord.conf
 	echo "" >> /etc/supervisor/conf.d/supervisord.conf
 	echo "[program:webmin]" >> /etc/supervisor/conf.d/supervisord.conf
 	echo "command=/usr/bin/perl /usr/share/webmin/miniserv.pl /etc/webmin/miniserv.conf" >> /etc/supervisor/conf.d/supervisord.conf
@@ -107,10 +132,11 @@ appSetup () {
 	fi
 
   NOW=$(date)
-	echo "Samba container initialisation completed on ${NOW}" > /etc/samba/init.txt
-	echo "DOMAIN=${DOMAINNAME}" >> /etc/samba/init.txt
-	echo "PARMETERS=${SAMBAPARAMETERS}" >> /etc/samba/init.txt
-  echo "HOSTIP=${HOSTIP}" >> /etc/samba/init.txt
+	echo "Samba container initialisation completed on ${NOW}" > /etc/samba/external/init.txt
+	echo "DOMAIN=${DOMAIN}" >> /etc/samba/external/init.txt
+	echo "PARMETERS=${SAMBAPARAMETERS}" >> /etc/samba/external/init.txt
+  echo "HOSTIP=${HOSTIP}" >> /etc/samba/external/init.txt
+  echo "INTERFACES=${INTERFACES}" >> /etc/samba/external/init.txt
 
 	appStart
 
