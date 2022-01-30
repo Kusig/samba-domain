@@ -1,5 +1,7 @@
 # This is a fork of the celso-alexandre/samba-domain at https://github.com/celso-alexandre/samba-domain
-# whicht itself is a fork of the fmstrat repo at https://github.com/Fmstrat/samba-domain
+# which itself is a fork of the fmstrat repo at https://github.com/Fmstrat/samba-domain
+
+Registry: https://hub.docker.com/repository/docker/guentherm/samba-domain
 
 ## Differences 
 * Webmin is preinstalled at the default 10000 port
