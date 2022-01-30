@@ -30,7 +30,9 @@ services:
       - 192.168.100.1
     extra_hosts:
       - server1:192.168.100.1
+      - server1.mydomain.ch:192.168.100.1
       - server2:192.168.100.2
+      - server2.mydomain.ch:192.168.100.2
     hostname: server2
     cap_add:
       - NET_ADMIN

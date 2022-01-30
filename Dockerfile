@@ -1,4 +1,4 @@
-FROM ubuntu:focal
+FROM ubuntu:impish
 
 ENV DEBIAN_FRONTEND noninteractive
 

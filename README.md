@@ -1,5 +1,17 @@
-# This is a fork of the fmstrat repo at https://github.com/Fmstrat/samba-domain
-# At the moment, the only difference is that this fork has webmin pre-installed at the default 10000 port
+# This is a fork of the celso-alexandre/samba-domain at https://github.com/celso-alexandre/samba-domain
+# whicht itself is a fork of the fmstrat repo at https://github.com/Fmstrat/samba-domain
+
+## Differences 
+* Webmin is preinstalled at the default 10000 port
+* usage of most recent Ubuntu impish
+* Automatically evaluate Samba version and corresponding tagging
+* Additional environment variables
+* Possible initial smb.conf for joining
+* Proper bash  and nano included
+* Initialisation script enhancements
+* Example docker-compose file added
+
+
 
 # Samba Active Directory Domain Controller for Docker
 
@@ -15,6 +27,11 @@ A well documented, tried and tested Samba Active Directory Domain Controller tha
 * `INSECURELDAP` defaults to `false`. When set to true, it removes the secure LDAP requirement. While this is not recommended for production it is required for some LDAP tools. You can remove it later from the smb.conf file stored in the config directory.
 * `MULTISITE` defaults to `false` and tells the container to connect to an OpenVPN site via an ovpn file with no password. For instance, if you have two locations where you run your domain controllers, they need to be able to interact. The VPN allows them to do that.
 * `NOCOMPLEXITY` defaults to `false`. When set to `true` it removes password complexity requirements including `complexity, history-length, min-pwd-age, max-pwd-age`
+* `SAMBAPARAMETERS` define additional parameters for the samba startup eg. --debug-stderr --debuglevel=3 
+* `SAMBAINTERFACES` define host interfaces to use for join eg. 127.0.0.1 192.168.100.1 
+* `SAMBAJOINDNSBACKEND` define kind of Samba DNS use eg. SAMBA_INTERNAL or NONE
+* `SAMBAJOINOPTIONS` Further option parameters to be passed to the samba-tools join operation
+* `INITIALCONFIG` define an optional initial smb.conf file to be used from beginning on eg. smb.join.conf
 
 ## Volumes for quick start
 * `/etc/localtime:/etc/localtime:ro` - Sets the timezone to match the host
@@ -537,6 +554,11 @@ services:
 
 ## Webmin Integration
 Webmin is installed on this docker forked docker image, so the port 10000 can be exposed for samba management
+In order to login in Webmin with root account, you need to assign the same a password within the image.
+eg.
+docker exec -ti samba passwd
+
+
 
 ## Joining the domain with Ubuntu
 For joining the domain with any client, everything should work just as you would expect if the active directory server was Windows based. For Ubuntu, there are many guides availble for joining, but to make things easier you can find an easily configurable script for joining your domain here: https://raw.githubusercontent.com/Fmstrat/samba-domain/master/ubuntu-join-domain.sh
