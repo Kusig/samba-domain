@@ -23,6 +23,7 @@ appSetup () {
 	JOINDNSBACKEND=${SAMBAJOINDNSBACKEND:-SAMBA_INTERNAL}
 	JOINOPTIONS=${SAMBAJOINOPTIONS}
 	INITCONFIG=${INITIALCONFIG:-NONE}
+	USERPWD=${USERPASSWORD:-NONE}
 	echo "Starting with Samba setup params=${SAMBAPARAMS}"
   echo "Starting with Samba interfaces=${INTERFACES}"
   echo "Starting with Samba join dns-backend=${JOINDNSBACKEND}"
@@ -144,6 +145,12 @@ appSetup () {
 
 appStart () {
   echo "Runnig samba start"
+
+  if [[ "$USERPWD" != "NONE" ]]; then
+  	echo "MasterPassword changed"
+    echo "root:${USERPWD}" | chpasswd
+  fi
+
 	/usr/bin/supervisord
 }
 

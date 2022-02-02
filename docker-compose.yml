@@ -3,7 +3,7 @@ version: '3'
 services:
 
   samba:
-    image: guentherm/samba-domain:4.13.14-Ubuntu
+    image: guentherm/samba-domain:4.13.17-Ubuntu
     container_name: samba
     volumes:
       - /etc/localtime:/etc/localtime:ro
@@ -23,6 +23,7 @@ services:
       - SAMBAJOINDNSBACKEND=SAMBA_INTERNAL
       - SAMBAJOINOPTIONS=
       - INITIALCONFIG=smb.join.conf
+      - USERPASSWORD=myImageRootPassword
     network_mode: host
     dns_search:
       - mydomain.ch

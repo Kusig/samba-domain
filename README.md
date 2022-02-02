@@ -12,8 +12,7 @@ Registry: https://hub.docker.com/repository/docker/guentherm/samba-domain
 * Proper bash  and nano included
 * Initialisation script enhancements
 * Example docker-compose file added
-
-
+* Define a default password for the image root user for initial webmin access
 
 # Samba Active Directory Domain Controller for Docker
 
@@ -32,8 +31,9 @@ A well documented, tried and tested Samba Active Directory Domain Controller tha
 * `SAMBAPARAMETERS` define additional parameters for the samba startup eg. --debug-stderr --debuglevel=3 
 * `SAMBAINTERFACES` define host interfaces to use for join eg. 127.0.0.1 192.168.100.1 
 * `SAMBAJOINDNSBACKEND` define kind of Samba DNS use eg. SAMBA_INTERNAL or NONE
-* `SAMBAJOINOPTIONS` Further option parameters to be passed to the samba-tools join operation
+* `SAMBAJOINOPTIONS` further option parameters to be passed to the samba-tools join operation
 * `INITIALCONFIG` define an optional initial smb.conf file to be used from beginning on eg. smb.join.conf
+* `USERPASSWORD` define an optional default password for the image root user. As well default login for webmin.
 
 ## Volumes for quick start
 * `/etc/localtime:/etc/localtime:ro` - Sets the timezone to match the host
@@ -557,8 +557,7 @@ services:
 ## Webmin Integration
 Webmin is installed on this docker forked docker image, so the port 10000 can be exposed for samba management
 In order to login in Webmin with root account, you need to assign the same a password within the image.
-eg.
-docker exec -ti samba passwd
+eg. docker exec -ti samba passwd
 
 
 
