@@ -147,8 +147,9 @@ appStart () {
   echo "Runnig samba start"
 
   if [[ "$USERPWD" != "NONE" ]]; then
-  	echo "MasterPassword changed"
-    echo "root:${USERPWD}" | chpasswd
+  	echo "Change MasterPassword for root"
+    /usr/share/webmin/changepass.pl /etc/webmin root $USERPWD
+    echo "Change MasterPassword completed"
   fi
 
 	/usr/bin/supervisord
